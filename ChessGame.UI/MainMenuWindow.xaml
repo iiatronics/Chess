@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Menu" Height="450" Width="350" WindowStartupLocation="CenterScreen">
     <StackPanel VerticalAlignment="Center" Margin="40">
-        <TextBlock Text="CHESS PRO" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,30"/>
+        <TextBlock Text="CHESS" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,30"/>
         
         <Button Content="New game" Height="40" Margin="0,5" Click="Start_Click"/>
         <Button Content="Settings" Height="40" Margin="0,5" Click="Settings_Click"/>
