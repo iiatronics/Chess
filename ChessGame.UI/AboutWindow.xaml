@@ -5,7 +5,7 @@
     <StackPanel Margin="20" VerticalAlignment="Center">
         <TextBlock Text="Chess" FontWeight="Bold" HorizontalAlignment="Center" FontSize="16"/>
         <TextBlock Text="Made by:" HorizontalAlignment="Center" Margin="0,10,0,0"/>
-        <TextBlock Text="Logic: Iia Yatscova" HorizontalAlignment="Center"/>
+        <TextBlock Text="Logic: Iia Yatskova" HorizontalAlignment="Center"/>
         <TextBlock Text="UI: Marharyta Ankudinova" HorizontalAlignment="Center"/>
         
         <Button Content="OK" Margin="0,15,0,0" Width="100" Click="BtnClose_Click"/>
