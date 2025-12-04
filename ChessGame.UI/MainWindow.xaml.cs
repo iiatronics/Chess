@@ -19,30 +19,69 @@ public partial class MainWindow : Window
     private void DrawBoard()
     {
         ChessBoardGrid.Children.Clear();
+
+        //  кольори шахівниці
+        var lightColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#F0D9B5");
+        var darkColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#B58863");
+
         for (int r = 0; r < 8; r++)
         {
             for (int c = 0; c < 8; c++)
             {
                 Button btn = new Button
                 {
-                    FontSize = 32,
+                    FontSize = 42, 
                     Tag = (r, c),
-                    BorderThickness = new Thickness(0)
+                    BorderThickness = new Thickness(0),
+                    Padding = new Thickness(0),
+                    VerticalContentAlignment = VerticalAlignment.Center, 
+                    HorizontalContentAlignment = HorizontalAlignment.Center,
+                    FontWeight = FontWeights.Bold 
                 };
                 
-                bool isWhite = (r + c) % 2 == 0;
-                btn.Background = isWhite ? Brushes.NavajoWhite : Brushes.SaddleBrown;
-                btn.Foreground = isWhite ? Brushes.Black : Brushes.White;
-                
-                btn.Click += OnCellClick; // Підписка на подію
+                // Розфарбування клітинок
+                bool isWhiteSquare = (r + c) % 2 == 0;
+                btn.Background = isWhiteSquare ? lightColor : darkColor;
 
-                // Тестові фігури
-                if(r == 1) btn.Content = "♟";
-                if(r == 6) btn.Content = "♙";
+                btn.Click += OnCellClick;
+
+                
+                // Чорні фігури (Зверху, рядки 0 і 1)
+                if (r <= 1) 
+                {
+                    btn.Foreground = Brushes.Black; // Колір тексту - Чорний
+                    if (r == 1) btn.Content = "♟"; // Пішак 
+                    if (r == 0) btn.Content = GetPieceSymbol(c); // Інші фігури 
+                }
+
+                // Білі фігури (Знизу, рядки 6 і 7)
+                if (r >= 6)
+                {
+                    btn.Foreground = Brushes.White; // Колір тексту - БІЛИЙ
+                    if (r == 6) btn.Content = "♟"; // Пішак
+                    if (r == 7) btn.Content = GetPieceSymbol(c);
+                }
 
                 _buttons[r, c] = btn;
                 ChessBoardGrid.Children.Add(btn);
             }
+        }
+    }
+
+    
+    private string GetPieceSymbol(int column)
+    {
+        switch (column)
+        {
+            case 0: return "♜"; // Тура
+            case 1: return "♞"; // Кінь
+            case 2: return "♝"; // Слон
+            case 3: return "♛"; // Ферзь
+            case 4: return "♚"; // Король
+            case 5: return "♝";
+            case 6: return "♞";
+            case 7: return "♜";
+            default: return "";
         }
     }
 
