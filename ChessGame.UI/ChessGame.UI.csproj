@@ -16,4 +16,10 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+<ItemGroup>
+    <None Update="Images\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  
 </Project>
