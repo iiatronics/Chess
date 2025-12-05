@@ -1,10 +1,25 @@
 <Window x:Class="ChessGame.UI.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="SETTINGS" Height="300" Width="400" WindowStartupLocation="CenterScreen">
+        Title="Settings" Height="350" Width="400" WindowStartupLocation="CenterScreen">
     <StackPanel Margin="20">
-        <CheckBox Content="Sound: turn on" IsChecked="True" Margin="5"/>
-        <CheckBox Content="Highlight moves" IsChecked="True" Margin="5"/>
-        <Button Content="Save" Margin="0,20,0,0" Click="Save_Click"/>
+        <TextBlock Text="Game Settings" FontSize="18" FontWeight="Bold" Margin="0,0,0,15"/>
+
+        <GroupBox Header="Gameplay Graphics">
+            <StackPanel Margin="5">
+                <CheckBox x:Name="ChkDarkTheme" Content="Dark Theme" Margin="5"/>
+                <CheckBox x:Name="ChkHints" Content="Highlight Moves" Margin="5"/>
+            </StackPanel>
+        </GroupBox>
+
+        <GroupBox Header="Sound" Margin="0,10">
+            <StackPanel Margin="5">
+                <Label Content="General Volume"/>
+                <Slider x:Name="SldVolume" Maximum="100" TickFrequency="10" IsSnapToTickEnabled="True"/>
+                <CheckBox x:Name="ChkSound" Content="Turn on" Margin="0,10,0,0"/>
+            </StackPanel>
+        </GroupBox>
+
+        <Button Content="Save" Height="30" Margin="0,10" Click="Save_Click"/>
     </StackPanel>
 </Window>

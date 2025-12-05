@@ -5,6 +5,7 @@ using System.Windows.Media.Imaging; // для картинок
 using System;
 using System.IO;
 using Newtonsoft.Json; 
+using ChessGame.UI.Services;
 
 namespace ChessGame.UI;
 
@@ -22,9 +23,22 @@ public partial class MainWindow : Window
     {
         ChessBoardGrid.Children.Clear();
 
-        // кольори шахівниці
-        var lightColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#E8E8E8");
-        var darkColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#888888");
+        bool isDarkTheme = Services.AppSettings.Current.IsDarkTheme;
+
+        SolidColorBrush lightColor, darkColor;
+
+        if (isDarkTheme)
+        {
+            // темна тема
+            lightColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#A9A9A9");
+            darkColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#696969");
+        }
+        else
+        {
+            // світла тема
+            lightColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#F0D9B5");
+            darkColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#B58863");
+        }
 
         for (int r = 0; r < 8; r++)
         {
@@ -34,19 +48,17 @@ public partial class MainWindow : Window
                 {
                     Tag = (r, c),
                     BorderThickness = new Thickness(0),
-                    // забираємо відступи, щоб картинка була великою
-                    Padding = new Thickness(5), 
+                    Padding = new Thickness(5),
+                   
                     Background = (r + c) % 2 == 0 ? lightColor : darkColor
                 };
                 
                 btn.Click += OnCellClick;
 
-                // чорні 
-                if (r == 1) btn.Content = GetPieceImage("pawn", false); 
+                // розстановка фігур 
+                if (r == 1) btn.Content = GetPieceImage("pawn", false);
                 if (r == 0) btn.Content = GetPieceImage(GetStartPieceName(c), false);
-
-                // білі 
-                if (r == 6) btn.Content = GetPieceImage("pawn", true); 
+                if (r == 6) btn.Content = GetPieceImage("pawn", true);
                 if (r == 7) btn.Content = GetPieceImage(GetStartPieceName(c), true);
 
                 _buttons[r, c] = btn;
@@ -54,7 +66,6 @@ public partial class MainWindow : Window
             }
         }
     }
-
     
     private Image? GetPieceImage(string pieceName, bool isWhite)
     {
