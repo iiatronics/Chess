@@ -1,6 +1,8 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging; // для картинок
+using System;
 using System.IO;
 using Newtonsoft.Json; 
 
@@ -20,9 +22,9 @@ public partial class MainWindow : Window
     {
         ChessBoardGrid.Children.Clear();
 
-        //  кольори шахівниці
-        var lightColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#F0D9B5");
-        var darkColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#B58863");
+        // кольори шахівниці
+        var lightColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#E8E8E8");
+        var darkColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#888888");
 
         for (int r = 0; r < 8; r++)
         {
@@ -30,37 +32,22 @@ public partial class MainWindow : Window
             {
                 Button btn = new Button
                 {
-                    FontSize = 42, 
                     Tag = (r, c),
                     BorderThickness = new Thickness(0),
-                    Padding = new Thickness(0),
-                    VerticalContentAlignment = VerticalAlignment.Center, 
-                    HorizontalContentAlignment = HorizontalAlignment.Center,
-                    FontWeight = FontWeights.Bold 
+                    // забираємо відступи, щоб картинка була великою
+                    Padding = new Thickness(5), 
+                    Background = (r + c) % 2 == 0 ? lightColor : darkColor
                 };
                 
-                // Розфарбування клітинок
-                bool isWhiteSquare = (r + c) % 2 == 0;
-                btn.Background = isWhiteSquare ? lightColor : darkColor;
-
                 btn.Click += OnCellClick;
 
-                
-                // Чорні фігури (Зверху, рядки 0 і 1)
-                if (r <= 1) 
-                {
-                    btn.Foreground = Brushes.Black; // Колір тексту - Чорний
-                    if (r == 1) btn.Content = "♟"; // Пішак 
-                    if (r == 0) btn.Content = GetPieceSymbol(c); // Інші фігури 
-                }
+                // чорні 
+                if (r == 1) btn.Content = GetPieceImage("pawn", false); 
+                if (r == 0) btn.Content = GetPieceImage(GetStartPieceName(c), false);
 
-                // Білі фігури (Знизу, рядки 6 і 7)
-                if (r >= 6)
-                {
-                    btn.Foreground = Brushes.White; // Колір тексту - БІЛИЙ
-                    if (r == 6) btn.Content = "♟"; // Пішак
-                    if (r == 7) btn.Content = GetPieceSymbol(c);
-                }
+                // білі 
+                if (r == 6) btn.Content = GetPieceImage("pawn", true); 
+                if (r == 7) btn.Content = GetPieceImage(GetStartPieceName(c), true);
 
                 _buttons[r, c] = btn;
                 ChessBoardGrid.Children.Add(btn);
@@ -69,23 +56,58 @@ public partial class MainWindow : Window
     }
 
     
-    private string GetPieceSymbol(int column)
+    private Image? GetPieceImage(string pieceName, bool isWhite)
     {
-        switch (column)
+        string prefix = isWhite ? "w" : "b";
+        string fileName = $"{prefix}_{pieceName}.png";
+
+        // 1.  шлях до папки bin/Debug/..
+        string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        
+        // 2. пошук папки Images 
+        string path = System.IO.Path.Combine(baseDir, "Images", fileName);
+
+        if (!System.IO.File.Exists(path))
         {
-            case 0: return "♜"; // Тура
-            case 1: return "♞"; // Кінь
-            case 2: return "♝"; // Слон
-            case 3: return "♛"; // Ферзь
-            case 4: return "♚"; // Король
-            case 5: return "♝";
-            case 6: return "♞";
-            case 7: return "♜";
+            // Якщо не знайде, покаже, де саме шукав. Це допоможе нам зрозуміти.
+            MessageBox.Show($"Файл не знайдено!\nШукав тут:\n{path}", "Помилка шляху");
+            return null;
+        }
+
+        try
+        {
+            BitmapImage bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.UriSource = new Uri(path, UriKind.Absolute); 
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.EndInit();
+
+            Image img = new Image();
+            img.Source = bitmap;
+            img.Stretch = Stretch.Uniform;
+            return img;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Помилка: {ex.Message}");
+            return null;
+        }
+    }
+    // допоміжний метод: повертає назву фігури 
+    private string GetStartPieceName(int col)
+    {
+        switch (col)
+        {
+            case 0: case 7: return "rook";
+            case 1: case 6: return "knight";
+            case 2: case 5: return "bishop";
+            case 3: return "queen";
+            case 4: return "king";
             default: return "";
         }
     }
 
-    private void OnCellClick(object sender, RoutedEventArgs e)
+       private void OnCellClick(object sender, RoutedEventArgs e)
     {
         if (sender is Button btn && btn.Tag is (int r, int c))
         {
@@ -106,7 +128,7 @@ public partial class MainWindow : Window
     private void LoadGame_Click(object sender, RoutedEventArgs e)
     {
         if (File.Exists("chess_save.json"))
-            MessageBox.Show($"File found\n{File.ReadAllText("chess_save.json")}");
+            MessageBox.Show($"file found\n{File.ReadAllText("chess_save.json")}");
         else
             MessageBox.Show("File not found");
     }
