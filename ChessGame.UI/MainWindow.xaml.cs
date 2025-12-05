@@ -4,8 +4,11 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging; // для картинок
 using System;
 using System.IO;
-using Newtonsoft.Json; 
+using Newtonsoft.Json;
 using ChessGame.UI.Services;
+using ChessGame.Core.Game;
+using ChessGame.Core.Pieces;
+using ChessGame.Core.Common;
 
 namespace ChessGame.UI;
 
@@ -13,9 +16,15 @@ public partial class MainWindow : Window
 {
     private readonly Button[,] _buttons = new Button[8, 8];
 
+    private GameSession _gameSession;
+    
+    private (int R, int C)? _selectedCell = null;
     public MainWindow()
     {
         InitializeComponent();
+
+        _gameSession = new GameSession();
+
         DrawBoard();
     }
 
@@ -49,18 +58,23 @@ public partial class MainWindow : Window
                     Tag = (r, c),
                     BorderThickness = new Thickness(0),
                     Padding = new Thickness(5),
-                   
+
                     Background = (r + c) % 2 == 0 ? lightColor : darkColor
                 };
-                
+
                 btn.Click += OnCellClick;
 
-                // розстановка фігур 
-                if (r == 1) btn.Content = GetPieceImage("pawn", false);
-                if (r == 0) btn.Content = GetPieceImage(GetStartPieceName(c), false);
-                if (r == 6) btn.Content = GetPieceImage("pawn", true);
-                if (r == 7) btn.Content = GetPieceImage(GetStartPieceName(c), true);
+                var piece = _gameSession.Board.GetPiece(c, r);
 
+                if (piece != null)
+                {
+    
+                    string pieceName = piece.Type.ToString().ToLower();
+                    bool isWhite = (piece.Color == PlayerColor.White);
+
+                    btn.Content = GetPieceImage(pieceName, isWhite);
+                }
+                
                 _buttons[r, c] = btn;
                 ChessBoardGrid.Children.Add(btn);
             }
@@ -118,19 +132,74 @@ public partial class MainWindow : Window
         }
     }
 
-       private void OnCellClick(object sender, RoutedEventArgs e)
+    private void OnCellClick(object sender, RoutedEventArgs e)
     {
         if (sender is Button btn && btn.Tag is (int r, int c))
         {
-            string notation = $"{(char)('A' + c)}{8 - r}";
-            MoveHistoryList.Items.Add($"Move: {notation}");
-            MoveHistoryList.ScrollIntoView(MoveHistoryList.Items[^1]);
+            // ЕТАП 1: Вибір фігури (клік 1)
+            if (_selectedCell == null)
+            {
+                var piece = _gameSession.Board.GetPiece(c, r);
+
+                // Можна вибрати тільки свою фігуру
+                if (piece != null && piece.Color == _gameSession.CurrentTurn)
+                {
+                    _selectedCell = (r, c);
+                    DrawBoard(); // Перемалювати, щоб показати підсвітку
+                }
+                return;
+            }
+
+            // ЕТАП 2: Спроба ходу (клік 2)
+            int fromR = _selectedCell.Value.R;
+            int fromC = _selectedCell.Value.C;
+
+            // Якщо клікнули туди ж - знімаємо виділення
+            if (fromR == r && fromC == c)
+            {
+                _selectedCell = null;
+                DrawBoard();
+                return;
+            }
+
+            // ВИКЛИКАЄМО ЛОГІКУ (MakeMove приймає x, y -> тобто c, r)
+            bool success = _gameSession.MakeMove(fromC, fromR, c, r);
+
+            if (success)
+            {
+                // Оновлюємо історію в UI
+                string moveText = $"{(char)('A' + fromC)}{8 - fromR} -> {(char)('A' + c)}{8 - r}";
+                MoveHistoryList.Items.Add(moveText);
+                MoveHistoryList.ScrollIntoView(MoveHistoryList.Items[^1]);
+
+                // Перевірка статусу гри
+                CheckGameStatus();
+
+                _selectedCell = null;
+                DrawBoard(); // Оновлюємо картинку (фігури перемістилися)
+            }
+            else
+            {
+                MessageBox.Show("Цей хід неможливий! (Шах або перешкода)");
+                _selectedCell = null;
+                DrawBoard();
+            }
         }
+    }
+    
+    private void CheckGameStatus()
+    {
+        if (_gameSession.GameStatus == GameStatus.WhiteWon)
+            MessageBox.Show("Mate! White win");
+        else if (_gameSession.GameStatus == GameStatus.BlackWon)
+            MessageBox.Show("Mate! Black win");
+        else if (_gameSession.GameStatus == GameStatus.Stalemate)
+            MessageBox.Show("Пат! Нічия.");
     }
 
     private void SaveGame_Click(object sender, RoutedEventArgs e)
     {
-        var data = new { History = MoveHistoryList.Items, Date = System.DateTime.Now };
+        var data = new { History = _gameSession.MoveHistory, Date = System.DateTime.Now };
         string json = JsonConvert.SerializeObject(data, Formatting.Indented);
         File.WriteAllText("chess_save.json", json);
         MessageBox.Show("Game saved");
