@@ -71,15 +71,15 @@ public partial class MainWindow : Window
 
         if (isDarkTheme)
         {
-            // темна тема
-            lightColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#A9A9A9");
-            darkColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#696969");
+            // ТЕМНА ТЕМА: Залишаємо оригінальні сірі кольори (як було на скріні)
+            lightColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#A9A9A9"); // Світло-сірий
+            darkColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#696969"); // Темно-сірий
         }
         else
         {
-            // світла тема
-            lightColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#F0D9B5");
-            darkColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#B58863");
+            // СВІТЛА ТЕМА: Міняємо на твій червоний та бежевий
+            lightColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#FFDEAD"); // Бежевий
+            darkColor = (SolidColorBrush)new BrushConverter().ConvertFrom("#660000"); // Темно-червоний
         }
 
         for (int r = 0; r < 8; r++)
@@ -92,6 +92,7 @@ public partial class MainWindow : Window
                     BorderThickness = new Thickness(0),
                     Padding = new Thickness(5),
 
+                    // Використовуємо вибрані кольори
                     Background = (r + c) % 2 == 0 ? lightColor : darkColor
                 };
 
@@ -101,7 +102,6 @@ public partial class MainWindow : Window
 
                 if (piece != null)
                 {
-    
                     string pieceName = piece.Type.ToString().ToLower();
                     bool isWhite = (piece.Color == PlayerColor.White);
 
