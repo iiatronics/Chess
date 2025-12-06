@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Imaging; // для картинок
+using System.Windows.Media.Imaging; 
 using System;
 using System.IO;
 using Newtonsoft.Json;
@@ -9,16 +9,27 @@ using ChessGame.UI.Services;
 using ChessGame.Core.Game;
 using ChessGame.Core.Pieces;
 using ChessGame.Core.Common;
+using System.Collections.Generic; 
+using System.Linq; 
+using Newtonsoft.Json; 
 
 namespace ChessGame.UI;
 
+// Простий клас для запису одного ходу у файл
+public class MoveRecord
+{
+    public int FromX { get; set; }
+    public int FromY { get; set; }
+    public int ToX { get; set; }
+    public int ToY { get; set; }
+}
 public partial class MainWindow : Window
 {
     private readonly Button[,] _buttons = new Button[8, 8];
 
     private System.Windows.Media.MediaPlayer _mediaPlayer = new System.Windows.Media.MediaPlayer();
     private GameSession _gameSession;
-    
+
     private (int R, int C)? _selectedCell = null;
     public MainWindow()
     {
@@ -101,19 +112,19 @@ public partial class MainWindow : Window
 
                 if (piece != null)
                 {
-    
+
                     string pieceName = piece.Type.ToString().ToLower();
                     bool isWhite = (piece.Color == PlayerColor.White);
 
                     btn.Content = GetPieceImage(pieceName, isWhite);
                 }
-                
+
                 _buttons[r, c] = btn;
                 ChessBoardGrid.Children.Add(btn);
             }
         }
     }
-    
+
     private Image? GetPieceImage(string pieceName, bool isWhite)
     {
         string prefix = isWhite ? "w" : "b";
@@ -121,7 +132,7 @@ public partial class MainWindow : Window
 
         // 1.  шлях до папки bin/Debug/..
         string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-        
+
         // 2. пошук папки Images 
         string path = System.IO.Path.Combine(baseDir, "Images", fileName);
 
@@ -136,7 +147,7 @@ public partial class MainWindow : Window
         {
             BitmapImage bitmap = new BitmapImage();
             bitmap.BeginInit();
-            bitmap.UriSource = new Uri(path, UriKind.Absolute); 
+            bitmap.UriSource = new Uri(path, UriKind.Absolute);
             bitmap.CacheOption = BitmapCacheOption.OnLoad;
             bitmap.EndInit();
 
@@ -151,7 +162,7 @@ public partial class MainWindow : Window
             return null;
         }
     }
-   
+
     private string GetStartPieceName(int col)
     {
         switch (col)
@@ -230,7 +241,7 @@ public partial class MainWindow : Window
             }
         }
     }
-    
+
     private void CheckGameStatus()
     {
         if (_gameSession.GameStatus == GameStatus.WhiteWon)
@@ -243,18 +254,85 @@ public partial class MainWindow : Window
 
     private void SaveGame_Click(object sender, RoutedEventArgs e)
     {
-        var data = new { History = _gameSession.MoveHistory, Date = System.DateTime.Now };
-        string json = JsonConvert.SerializeObject(data, Formatting.Indented);
-        File.WriteAllText("chess_save.json", json);
-        MessageBox.Show("Game saved");
+        var movesToSave = _gameSession.MoveHistory.Reverse().Select(m => new MoveRecord
+        {
+            FromX = m.FromX,
+            FromY = m.FromY,
+            ToX = m.ToX,
+            ToY = m.ToY
+        }).ToList();
+
+        var saveData = new
+        {
+            Date = DateTime.Now,
+            Moves = movesToSave
+        };
+
+        string json = JsonConvert.SerializeObject(saveData, Formatting.Indented);
+
+        try
+        {
+            File.WriteAllText("chess_save.json", json);
+            MessageBox.Show("Гру успішно збережено!", "Збереження");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Помилка при збереженні: {ex.Message}");
+        }
     }
 
     private void LoadGame_Click(object sender, RoutedEventArgs e)
     {
-        if (File.Exists("chess_save.json"))
-            MessageBox.Show($"file found\n{File.ReadAllText("chess_save.json")}");
-        else
-            MessageBox.Show("File not found");
+        if (!File.Exists("chess_save.json"))
+        {
+            MessageBox.Show("Збереженої гри не знайдено.");
+            return;
+        }
+
+        try
+        {
+            string json = File.ReadAllText("chess_save.json");
+
+            dynamic data = JsonConvert.DeserializeObject(json);
+
+            if (data?.Moves == null)
+            {
+                MessageBox.Show("Файл пошкоджено або має неправильний формат.");
+                return;
+            }
+
+            _gameSession = new GameSession(); 
+            MoveHistoryList.Items.Clear();    
+            _selectedCell = null;             
+
+            foreach (var move in data.Moves)
+            {
+                
+                int fx = (int)move.FromX;
+                int fy = (int)move.FromY;
+                int tx = (int)move.ToX;
+                int ty = (int)move.ToY;
+
+                bool success = _gameSession.MakeMove(fx, fy, tx, ty);
+
+                if (success)
+                {
+                    string moveText = $"{(char)('A' + fx)}{8 - fy} -> {(char)('A' + tx)}{8 - ty}";
+                    MoveHistoryList.Items.Add(moveText);
+                }
+            }
+
+            MoveHistoryList.ScrollIntoView(MoveHistoryList.Items[^1]);
+            TxtStatus.Text = $"Turn: {_gameSession.CurrentTurn}";
+            DrawBoard(); 
+            CheckGameStatus();
+
+            MessageBox.Show("Гру завантажено!");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Помилка при завантаженні: {ex.Message}");
+        }
     }
 
     private void BackToMenu_Click(object sender, RoutedEventArgs e)

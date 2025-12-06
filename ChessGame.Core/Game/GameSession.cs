@@ -60,17 +60,21 @@ namespace ChessGame.Core.Game
         {
             ChessPiece piece = Board.GetPiece(fromX, fromY);
 
-            if (piece == null)
+            if (piece == null) return false;
+            if (piece.Color != CurrentTurn) return false;
+
+
+            if (piece.Type == PieceType.King && System.Math.Abs(toX - fromX) == 2 && fromY == toY)
             {
+
+                if (PerformCastling(fromX, fromY, toX))
+                {
+                    SwapTurn();
+                    return true;
+                }
                 return false;
             }
 
-            if (piece.Color != CurrentTurn)
-            {
-                return false;
-            }
-
-            // 2. Запитуємо у фігури, чи може вона так ходити
             if (!piece.IsValidMove(fromX, fromY, toX, toY, Board))
             {
                 return false;
@@ -79,21 +83,18 @@ namespace ChessGame.Core.Game
             ChessPiece capturedPiece = Board.GetPiece(toX, toY);
             bool originalHasMoved = piece.HasMoved;
 
-            //Віртуальний хід
             Board.SetPiece(toX, toY, piece);
             Board.SetPiece(fromX, fromY, null);
 
             bool isSuicide = IsKingInCheck(CurrentTurn);
 
-            //ВІДКОЧУЄМО ВСЕ НАЗАД
+
             Board.SetPiece(fromX, fromY, piece);
             Board.SetPiece(toX, toY, capturedPiece);
             piece.HasMoved = originalHasMoved;
 
-            //Якщо це було самогубство - забороняємо хід
             if (isSuicide)
             {
-                System.Diagnostics.Debug.WriteLine("Хід заборонено: Король під ударом!");
                 return false;
             }
 
@@ -101,6 +102,19 @@ namespace ChessGame.Core.Game
             Board.SetPiece(fromX, fromY, null);
             piece.HasMoved = true;
 
+
+            if (piece.Type == PieceType.Pawn)
+            {
+                if ((piece.Color == PlayerColor.White && toY == 0) ||
+                    (piece.Color == PlayerColor.Black && toY == 7))
+                {
+                    var queen = new Queen(piece.Color);
+                    queen.HasMoved = true;
+                    Board.SetPiece(toX, toY, queen);
+
+
+                }
+            }
 
             MoveHistory.Push(new Move(fromX, fromY, toX, toY, piece, capturedPiece));
 
@@ -121,6 +135,45 @@ namespace ChessGame.Core.Game
             return true;
         }
 
+        private bool PerformCastling(int kingX, int kingY, int targetX)
+        {
+            if (IsKingInCheck(CurrentTurn)) return false;
+
+            ChessPiece king = Board.GetPiece(kingX, kingY);
+            bool isKingSide = targetX > kingX; 
+            int rookX = isKingSide ? 7 : 0;    
+            ChessPiece rook = Board.GetPiece(rookX, kingY);
+
+            if (rook == null || rook.Type != PieceType.Rook || rook.Color != king.Color) return false;
+            if (king.HasMoved || rook.HasMoved) return false;
+
+            int start = System.Math.Min(kingX, rookX) + 1;
+            int end = System.Math.Max(kingX, rookX);
+            for (int i = start; i < end; i++)
+            {
+                if (Board.GetPiece(i, kingY) != null) return false;
+            }
+
+            int direction = isKingSide ? 1 : -1;
+            if (IsSquareUnderAttack(kingX + direction, kingY, CurrentTurn)) return false;
+
+            if (IsSquareUnderAttack(targetX, kingY, CurrentTurn)) return false;
+
+
+            Board.SetPiece(kingX, kingY, null);
+            Board.SetPiece(targetX, kingY, king);
+            king.HasMoved = true;
+
+
+            int rookTargetX = isKingSide ? targetX - 1 : targetX + 1;
+            Board.SetPiece(rookX, kingY, null);
+            Board.SetPiece(rookTargetX, kingY, rook);
+            rook.HasMoved = true;
+
+            MoveHistory.Push(new Move(kingX, kingY, targetX, kingY, king, null));
+
+            return true;
+        }
         public bool IsCheckMate(PlayerColor playerColor)
         {
             if (!IsKingInCheck(playerColor)) return false;
@@ -209,21 +262,38 @@ namespace ChessGame.Core.Game
             CurrentTurn = (CurrentTurn == PlayerColor.White) ? PlayerColor.Black : PlayerColor.White;
         }
 
-        public bool IsSquareUnderAttack(int x, int y, PlayerColor attackerColor)
+        public bool IsSquareUnderAttack(int targetX, int targetY, PlayerColor defenderColor)
         {
-            // Проходимо по всій дошці
-            for (int i = 0; i < 8; i++)
+            // 1. ВИЗНАЧАЄМО КОЛІР ВОРОГА
+            // Якщо захищаються Білі, то нападають Чорні, і навпаки.
+            PlayerColor attackerColor = (defenderColor == PlayerColor.White) ? PlayerColor.Black : PlayerColor.White;
+
+            for (int x = 0; x < 8; x++)
             {
-                for (int j = 0; j < 8; j++)
+                for (int y = 0; y < 8; y++)
                 {
-                    var piece = Board.GetPiece(i, j);
-                    // Якщо це фігура ворога
+                    var piece = Board.GetPiece(x, y);
+
                     if (piece != null && piece.Color == attackerColor)
                     {
-                        // І вона може походити на клітинку (x, y)
-                        if (piece.IsValidMove(i, j, x, y, Board))
+                        if (piece.Type == PieceType.Pawn)
                         {
-                            return true;
+                            int direction = (piece.Color == PlayerColor.White) ? -1 : 1;
+
+                            if (targetY == y + direction)
+                            {
+                                if (targetX == x - 1 || targetX == x + 1)
+                                {
+                                    return true; 
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (piece.IsValidMove(x, y, targetX, targetY, Board))
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
