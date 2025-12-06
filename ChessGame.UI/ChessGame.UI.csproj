@@ -34,6 +34,12 @@
   <ItemGroup>
     <Resource Include="Images\rock_bg.jpg" />
     <Resource Include="Images\star_bg.jpg" />
+    
+    <Resource Include="Images\menu_bg.jpg" />
+    <Resource Include="Images\btn_new.png" />
+    <Resource Include="Images\btn_settings.png" />
+    <Resource Include="Images\btn_about.png" />
+    <Resource Include="Images\btn_exit.png" />
   </ItemGroup>
-  
+
 </Project>
