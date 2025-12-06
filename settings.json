@@ -1,6 +1,6 @@
 {
-  "IsSoundOn": true,
+  "IsSoundOn": false,
   "IsDarkTheme": true,
   "ShowHints": true,
-  "Volume": 10.0
+  "Volume": 0.0
 }
