@@ -16,6 +16,7 @@ public partial class MainWindow : Window
 {
     private readonly Button[,] _buttons = new Button[8, 8];
 
+    private System.Windows.Media.MediaPlayer _mediaPlayer = new System.Windows.Media.MediaPlayer();
     private GameSession _gameSession;
     
     private (int R, int C)? _selectedCell = null;
@@ -26,6 +27,38 @@ public partial class MainWindow : Window
         _gameSession = new GameSession();
 
         DrawBoard();
+    }
+
+    private void PlayMoveSound(PlayerColor playerWhoMoved)
+    {
+        string fileName = "";
+
+        if (playerWhoMoved == PlayerColor.White)
+        {
+            fileName = "meow.mp3"; // Звук для білих
+        }
+        else
+        {
+            fileName = "boom.mp3"; // Звук для чорних
+        }
+
+        try
+        {
+
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            string fullPath = System.IO.Path.Combine(baseDir, "sounds", fileName);
+
+            if (System.IO.File.Exists(fullPath))
+            {
+                _mediaPlayer.Open(new Uri(fullPath));
+                _mediaPlayer.Play();
+            }
+        }
+        catch (Exception ex)
+        {
+
+            System.Diagnostics.Debug.WriteLine($"Помилка звуку: {ex.Message}");
+        }
     }
 
     private void DrawBoard()
@@ -118,7 +151,7 @@ public partial class MainWindow : Window
             return null;
         }
     }
-    // допоміжний метод: повертає назву фігури 
+   
     private string GetStartPieceName(int col)
     {
         switch (col)
@@ -162,21 +195,32 @@ public partial class MainWindow : Window
                 return;
             }
 
-            // ВИКЛИКАЄМО ЛОГІКУ (MakeMove приймає x, y -> тобто c, r)
             bool success = _gameSession.MakeMove(fromC, fromR, c, r);
 
             if (success)
             {
-                // Оновлюємо історію в UI
+                // 1. ЗВУКИ (Ваш код правильний)
+                if (_gameSession.CurrentTurn == PlayerColor.Black)
+                {
+                    PlayMoveSound(PlayerColor.White);
+                }
+                else
+                {
+                    PlayMoveSound(PlayerColor.Black);
+                }
+
+                // 2. ОНОВЛЕННЯ ТЕКСТУ (ОСЬ ЦЬОГО НЕ ВИСТАЧАЛО!) <--- ДИВИСЬ ТУТ
+                TxtStatus.Text = $"Turn: {_gameSession.CurrentTurn}";
+
+                // 3. Історія та інше
                 string moveText = $"{(char)('A' + fromC)}{8 - fromR} -> {(char)('A' + c)}{8 - r}";
                 MoveHistoryList.Items.Add(moveText);
                 MoveHistoryList.ScrollIntoView(MoveHistoryList.Items[^1]);
 
-                // Перевірка статусу гри
                 CheckGameStatus();
 
                 _selectedCell = null;
-                DrawBoard(); // Оновлюємо картинку (фігури перемістилися)
+                DrawBoard();
             }
             else
             {
@@ -218,4 +262,6 @@ public partial class MainWindow : Window
         new MainMenuWindow().Show();
         this.Close();
     }
+
+
 }

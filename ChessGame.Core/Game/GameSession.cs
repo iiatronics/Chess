@@ -77,35 +77,33 @@ namespace ChessGame.Core.Game
             }
 
             ChessPiece capturedPiece = Board.GetPiece(toX, toY);
-            bool originalHasMoved = piece.HasMoved; // Запам'ятовуємо стан "чи ходив"
+            bool originalHasMoved = piece.HasMoved;
 
-            // Робимо тимчасовий хід
+            //Віртуальний хід
             Board.SetPiece(toX, toY, piece);
             Board.SetPiece(fromX, fromY, null);
 
-            // Перевіряємо: чи не опинився НАШ Король під шахом після нашого ж ходу?
-            bool isSelfCheck = IsKingInCheck(CurrentTurn);
+            bool isSuicide = IsKingInCheck(CurrentTurn);
 
-            // ВІДКОЧУЄМО ЗМІНИ НАЗАД (Undo)
+            //ВІДКОЧУЄМО ВСЕ НАЗАД
             Board.SetPiece(fromX, fromY, piece);
             Board.SetPiece(toX, toY, capturedPiece);
             piece.HasMoved = originalHasMoved;
 
-            if (isSelfCheck)
+            //Якщо це було самогубство - забороняємо хід
+            if (isSuicide)
             {
-                return false; // Хід неможливий, бо король під ударом!
+                System.Diagnostics.Debug.WriteLine("Хід заборонено: Король під ударом!");
+                return false;
             }
-            // --- КІНЕЦЬ СИМУЛЯЦІЇ ---
 
-            // Якщо все добре — виконуємо хід по-справжньому
             Board.SetPiece(toX, toY, piece);
             Board.SetPiece(fromX, fromY, null);
             piece.HasMoved = true;
 
-            // Запис в історію
+
             MoveHistory.Push(new Move(fromX, fromY, toX, toY, piece, capturedPiece));
 
-            // Передаємо хід
             SwapTurn();
 
             if (IsCheckMate(CurrentTurn))
@@ -115,7 +113,6 @@ namespace ChessGame.Core.Game
                 else
                     GameStatus = GameStatus.WhiteWon;
             }
-            // 2. Якщо мату немає, перевіряємо на ПАТ (нічия)
             else if (IsStalemate(CurrentTurn))
             {
                 GameStatus = GameStatus.Stalemate;
@@ -126,43 +123,35 @@ namespace ChessGame.Core.Game
 
         public bool IsCheckMate(PlayerColor playerColor)
         {
-            // 1. Якщо шаху немає, то це точно не мат (може бути пат, але це інше)
             if (!IsKingInCheck(playerColor)) return false;
 
-            // 2. Перебираємо ВСІ свої фігури
             for (int x = 0; x < 8; x++)
             {
                 for (int y = 0; y < 8; y++)
                 {
                     var piece = Board.GetPiece(x, y);
 
-                    // Якщо це наша фігура
                     if (piece != null && piece.Color == playerColor)
                     {
-                        // 3. Перебираємо ВСІ клітинки, куди вона теоретично може піти
                         for (int targetX = 0; targetX < 8; targetX++)
                         {
                             for (int targetY = 0; targetY < 8; targetY++)
                             {
-                                // 4. Симулюємо хід
-                                // (тут дублюємо логіку симуляції, щоб не змінювати стан гри)
                                 if (piece.IsValidMove(x, y, targetX, targetY, Board))
                                 {
-                                    // Робимо віртуальний хід
                                     var captured = Board.GetPiece(targetX, targetY);
                                     Board.SetPiece(targetX, targetY, piece);
                                     Board.SetPiece(x, y, null);
 
-                                    // Перевіряємо, чи зник шах
+
                                     bool stillInCheck = IsKingInCheck(playerColor);
 
-                                    // Повертаємо фігури назад
                                     Board.SetPiece(x, y, piece);
                                     Board.SetPiece(targetX, targetY, captured);
 
                                     if (!stillInCheck)
                                     {
-                                        return false; // Знайшли порятунок! Це не мат.
+                                        return false; 
                                     }
                                 }
                             }
@@ -171,17 +160,13 @@ namespace ChessGame.Core.Game
                 }
             }
 
-            return true; // Жоден хід не врятував. МАТ.
+            return true; 
         }
 
         public bool IsStalemate(PlayerColor playerColor)
         {
-            // 1. Головна відмінність від Мату:
-            // Якщо Король під шахом - це точно НЕ пат (це може бути мат або просто шах).
             if (IsKingInCheck(playerColor)) return false;
 
-            // 2. Далі логіка така сама: перевіряємо, чи є хоч один легальний хід
-            // Перебираємо ВСІ свої фігури
             for (int x = 0; x < 8; x++)
             {
                 for (int y = 0; y < 8; y++)
@@ -190,23 +175,18 @@ namespace ChessGame.Core.Game
 
                     if (piece != null && piece.Color == playerColor)
                     {
-                        // Перебираємо всі можливі клітинки
                         for (int targetX = 0; targetX < 8; targetX++)
                         {
                             for (int targetY = 0; targetY < 8; targetY++)
                             {
-                                // Симулюємо хід
                                 if (piece.IsValidMove(x, y, targetX, targetY, Board))
                                 {
-                                    // Робимо віртуальний хід
                                     var captured = Board.GetPiece(targetX, targetY);
                                     Board.SetPiece(targetX, targetY, piece);
                                     Board.SetPiece(x, y, null);
 
-                                    // Перевіряємо, чи не підставились ми під шах (самогубство заборонено)
                                     bool isSelfCheck = IsKingInCheck(playerColor);
 
-                                    // Повертаємо фігури назад
                                     Board.SetPiece(x, y, piece);
                                     Board.SetPiece(targetX, targetY, captured);
 

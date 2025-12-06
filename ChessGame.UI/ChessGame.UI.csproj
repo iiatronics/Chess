@@ -22,4 +22,12 @@
     </None>
   </ItemGroup>
   
+  <ItemGroup>
+    <None Update="sounds\meow.mp3">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="sounds\boom.mp3">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
