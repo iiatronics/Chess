@@ -30,4 +30,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Images\rock_bg.jpg" />
+    <Resource Include="Images\star_bg.jpg" />
+  </ItemGroup>
+  
 </Project>
