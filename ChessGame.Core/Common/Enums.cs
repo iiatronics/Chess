@@ -6,6 +6,13 @@ namespace ChessGame.Core.Common
         Black
     }
 
+    public enum GameStatus
+    {
+        InProgress,
+        WhiteWon,
+        BlackWon,
+        Stalemate
+    }
     public enum PieceType
     {
         Pawn,   // Пішак
