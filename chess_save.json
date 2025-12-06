@@ -1,6 +1,5 @@
 {
-<<<<<<< HEAD
-  "Date": "2025-12-06T13:12:18.4190088+02:00",
+  "Date": "2025-12-06T21:09:09.1709359+02:00",
   "Moves": [
     {
       "FromX": 4,
@@ -13,63 +12,36 @@
       "FromY": 1,
       "ToX": 4,
       "ToY": 3
-=======
-  "History": [
-    {
-      "FromX": 3,
-      "FromY": 1,
-      "ToX": 3,
-      "ToY": 2,
-      "MovedPiece": {
-        "Color": 1,
-        "Type": 0,
-        "HasMoved": true
-      },
-      "CapturedPiece": null
->>>>>>> feature/backgrounds
     },
     {
       "FromX": 3,
-      "FromY": 6,
-      "ToX": 3,
-<<<<<<< HEAD
+      "FromY": 7,
+      "ToX": 7,
+      "ToY": 3
+    },
+    {
+      "FromX": 1,
+      "FromY": 0,
+      "ToX": 2,
+      "ToY": 2
+    },
+    {
+      "FromX": 5,
+      "FromY": 7,
+      "ToX": 2,
       "ToY": 4
+    },
+    {
+      "FromX": 6,
+      "FromY": 0,
+      "ToX": 5,
+      "ToY": 2
+    },
+    {
+      "FromX": 7,
+      "FromY": 3,
+      "ToX": 5,
+      "ToY": 1
     }
   ]
-=======
-      "ToY": 5,
-      "MovedPiece": {
-        "Color": 0,
-        "Type": 0,
-        "HasMoved": true
-      },
-      "CapturedPiece": null
-    },
-    {
-      "FromX": 4,
-      "FromY": 1,
-      "ToX": 4,
-      "ToY": 2,
-      "MovedPiece": {
-        "Color": 1,
-        "Type": 0,
-        "HasMoved": true
-      },
-      "CapturedPiece": null
-    },
-    {
-      "FromX": 4,
-      "FromY": 6,
-      "ToX": 4,
-      "ToY": 5,
-      "MovedPiece": {
-        "Color": 0,
-        "Type": 0,
-        "HasMoved": true
-      },
-      "CapturedPiece": null
-    }
-  ],
-  "Date": "2025-12-06T15:38:34.7673915+02:00"
->>>>>>> feature/backgrounds
 }
