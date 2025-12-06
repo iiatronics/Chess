@@ -1,6 +1,11 @@
 {
   "IsSoundOn": true,
   "IsDarkTheme": false,
+
   "ShowHints": true,
   "Volume": 10.0
+
+  "ShowHints": false,
+  "Volume": 40.0
+ 607cb9be2d4ce84421bcd0853ec69730f817a723
 }
